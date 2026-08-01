@@ -3,6 +3,7 @@ import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from api.schemas import ChatRequest, ChatResponse
 from services import loader, splitter, embedding_manager, vector_store
+from services import chat_engine
 
 router = APIRouter()
 
@@ -20,9 +21,20 @@ ALLOWED_EXTENSIONS = {
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
 
-    return ChatResponse(
-        answer=f"You asked: {request.question}"
-    )
+    try:
+        answer = chat_engine.chat(
+            question=request.question
+        )
+
+        return ChatResponse(
+            answer=answer
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 @router.post("/upload")
