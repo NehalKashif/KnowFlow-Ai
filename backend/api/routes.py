@@ -2,8 +2,7 @@ from pathlib import Path
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from api.schemas import ChatRequest, ChatResponse
-
-from rag.loader import DocumentLoader
+from services import loader, splitter, embedding_manager, vector_store
 
 router = APIRouter()
 
@@ -46,8 +45,10 @@ async def upload(file: UploadFile = File(...)):
         with open(save_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        loader = DocumentLoader()
         documents = loader.load_document(save_path)
+        chunks = splitter.split_documents(documents)
+        embeddings = embedding_manager.generate_embeddings(chunks)
+        vector_store.add_documents(chunks, embeddings)
 
     except Exception as e:
         raise HTTPException(
@@ -61,6 +62,8 @@ async def upload(file: UploadFile = File(...)):
     return {
         "message": "File uploaded successfully.",
         "filename": file.filename,
-        "Document Name": documents[0].metadata.get("source", "Unknown")
-
+        "Document Name": documents[0].metadata.get("source", "Unknown"),
+        "Chunks Created": len(chunks),
+        "Embeddings Generated": len(embeddings),
+        "Vector Store Count": vector_store.count(),
     }
