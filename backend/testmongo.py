@@ -1,16 +1,6 @@
-from dotenv import load_dotenv
-from pymongo import MongoClient
-import os
+from databases.mongodb import users_collection
 
-load_dotenv()
+users = list(users_collection.find())
 
-uri = os.getenv("MONGODB_URI")
-
-client = MongoClient(uri)
-
-try:
-    client.admin.command("ping")
-    print("✅ Connected to MongoDB Atlas successfully!")
-except Exception as e:
-    print("❌ Connection failed")
-    print(e)
+for user in users:
+    print(user)
