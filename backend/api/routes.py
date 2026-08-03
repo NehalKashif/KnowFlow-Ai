@@ -6,6 +6,8 @@ from services import loader, splitter, embedding_manager, vector_store
 from services import chat_engine
 from fastapi import Depends
 from auth.dependencies import get_current_user
+from datetime import datetime
+from databases.mongodb import documents_collection
 
 router = APIRouter()
 
@@ -69,6 +71,18 @@ async def upload(
         chunks = splitter.split_documents(documents)
         embeddings = embedding_manager.generate_embeddings(chunks)
         vector_store.add_documents(chunks, embeddings)
+
+        # Save document information to MongoDB
+        document = {
+                "user_id": current_user["_id"],
+                "filename": file.filename,
+                "document_path": str(save_path),
+                "chunks": len(chunks),
+                "uploaded_at": datetime.utcnow(),
+            }
+    
+
+        documents_collection.insert_one(document)
 
     except Exception as e:
         raise HTTPException(
