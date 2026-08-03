@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 import os
+import token
 
 from dotenv import load_dotenv
 from jose import JWTError, jwt
+from jose import JWTError, ExpiredSignatureError
 
 load_dotenv()
 
@@ -40,19 +42,20 @@ class JWTManager:
         return token
 
     @staticmethod
-    def verify_token(token: str):
+    def verify_token(token: str) -> dict:
         """
-        Verify a JWT token.
-        Returns the payload if valid.
-        """
-
-        try:
-            payload = jwt.decode(
+        Verify and decode a JWT token.
+        Raises:
+                ExpiredSignatureError
+                JWTError
+            """
+        
+        payload = jwt.decode(
                 token,
                 SECRET_KEY,
                 algorithms=[ALGORITHM],
             )
-            return payload
+        
+        return payload
 
-        except JWTError:
-            return None
+    

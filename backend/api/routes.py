@@ -4,6 +4,8 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from api.schemas import ChatRequest, ChatResponse
 from services import loader, splitter, embedding_manager, vector_store
 from services import chat_engine
+from fastapi import Depends
+from auth.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -18,8 +20,11 @@ ALLOWED_EXTENSIONS = {
     ".md",
 }
 
-@router.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest):
+@router.post("/chat")
+def chat(
+    request: ChatRequest,
+    current_user=Depends(get_current_user)
+):
 
     try:
         answer = chat_engine.chat(
@@ -38,7 +43,10 @@ def chat(request: ChatRequest):
 
 
 @router.post("/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user)
+):
     """
     Upload a PDF and save it to the uploads folder.
     """
