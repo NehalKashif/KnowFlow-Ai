@@ -1,13 +1,14 @@
 from pathlib import Path
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from api.schemas import ChatRequest, ChatResponse
-from services import loader, splitter, embedding_manager, vector_store
-from services import chat_engine
+from api.schemas import ChatRequest, ChatResponse, CreateChatRequest, ChatSessionResponse
+from service import loader, splitter, embedding_manager, vector_store
+from service import chat_engine
 from fastapi import Depends
 from auth.dependencies import get_current_user
 from datetime import datetime
 from databases.mongodb import documents_collection
+from services.chat_service import ChatService
 
 router = APIRouter()
 
@@ -107,3 +108,16 @@ async def upload(
         "Embeddings Generated": len(embeddings),
         "Vector Store Count": vector_store.count(),
     }
+
+@router.post("/chat/session")
+def create_chat(
+    request: CreateChatRequest,
+    current_user=Depends(get_current_user),
+):
+
+    chat = ChatService.create_chat(
+        user_id=str(current_user["_id"]),
+        title=request.title,
+    )
+
+    return chat

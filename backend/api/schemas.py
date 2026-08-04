@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -44,3 +46,12 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class CreateChatRequest(BaseModel):
+    title: str
+
+
+class ChatSessionResponse(BaseModel):
+    id: str
+    title: str
+    created_at: datetime
