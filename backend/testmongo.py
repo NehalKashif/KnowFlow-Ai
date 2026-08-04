@@ -1,6 +1,7 @@
-from databases.mongodb import users_collection
+from services.message_service import MessageService
 
-users = list(users_collection.find())
 
-for user in users:
-    print(user)
+
+messages = MessageService.delete_messages("test_chat")
+
+print(messages)

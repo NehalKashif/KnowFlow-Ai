@@ -1,0 +1,143 @@
+"""
+message_service.py
+
+Handles all database operations related to chat messages.
+"""
+
+from datetime import datetime
+from bson import ObjectId
+
+from databases.mongodb import messages_collection
+
+
+class MessageService:
+    """
+    Service class for managing chat messages.
+    """
+
+    @staticmethod
+    def save_message(
+        chat_id: str,
+        role: str,
+        content: str,
+    ):
+        """
+        Save a new message to MongoDB.
+
+        Args:
+            chat_id: ID of the chat session.
+            role: Either 'user' or 'assistant'.
+            content: Message content.
+
+        Returns:
+            Inserted message.
+        """
+
+        message = {
+            "chat_id": chat_id,
+            "role": role,
+            "content": content,
+            "created_at": datetime.utcnow(),
+        }
+
+        result = messages_collection.insert_one(message)
+
+        message["_id"] = str(result.inserted_id)
+
+        return message
+
+    @staticmethod
+    def get_messages(chat_id: str):
+        """
+        Retrieve all messages belonging to a chat.
+
+        Args:
+            chat_id: Chat session ID.
+
+        Returns:
+            List of messages ordered by creation time.
+        """
+
+        messages = list(
+            messages_collection.find(
+                {"chat_id": chat_id}
+            ).sort("created_at", 1)
+        )
+
+        for message in messages:
+            message["_id"] = str(message["_id"])
+
+        return messages
+
+    @staticmethod
+    def get_message(message_id: str):
+        """
+        Retrieve a single message.
+
+        Args:
+            message_id: Message ID.
+
+        Returns:
+            Message document or None.
+        """
+
+        message = messages_collection.find_one(
+            {"_id": ObjectId(message_id)}
+        )
+
+        if message:
+            message["_id"] = str(message["_id"])
+
+        return message
+
+    @staticmethod
+    def delete_messages(chat_id: str):
+        """
+        Delete all messages of a chat.
+
+        Args:
+            chat_id: Chat session ID.
+
+        Returns:
+            Number of deleted messages.
+        """
+
+        result = messages_collection.delete_many(
+            {"chat_id": chat_id}
+        )
+
+        return result.deleted_count
+
+    @staticmethod
+    def delete_message(message_id: str):
+        """
+        Delete a single message.
+
+        Args:
+            message_id: Message ID.
+
+        Returns:
+            True if deleted successfully.
+        """
+
+        result = messages_collection.delete_one(
+            {"_id": ObjectId(message_id)}
+        )
+
+        return result.deleted_count == 1
+
+    @staticmethod
+    def count_messages(chat_id: str):
+        """
+        Count total messages in a chat.
+
+        Args:
+            chat_id: Chat session ID.
+
+        Returns:
+            Number of messages.
+        """
+
+        return messages_collection.count_documents(
+            {"chat_id": chat_id}
+        )
