@@ -53,10 +53,15 @@ class VectorStore:
         print("=" * 50)
 
     def add_documents(
-        self,
-        chunks: List[Document],
-        embeddings: np.ndarray,
-    ) -> None:
+            self,
+            chunks: List[Document],
+            embeddings: np.ndarray,
+            user_id: str,
+            filename: str,
+            chat_id: str | None = None,
+        ):
+                
+    
         """
         Store document chunks and their embeddings.
 
@@ -83,7 +88,13 @@ class VectorStore:
 
             documents.append(chunk.page_content)
 
-            metadatas.append(chunk.metadata)
+            metadata = {
+                **chunk.metadata,
+                "user_id": user_id,
+                "chat_id": chat_id,
+                "filename": filename,
+            }
+            metadatas.append(metadata)
 
             vectors.append(embedding.tolist())
 
@@ -101,6 +112,8 @@ class VectorStore:
         self,
         query_embedding: np.ndarray,
         top_k: int = 5,
+        user_id: str | None = None,
+        chat_id: str | None = None,
     ):
         """
         Retrieve the most similar chunks.
@@ -112,11 +125,22 @@ class VectorStore:
         Returns:
             ChromaDB query results.
         """
+        where = {}
 
-        results = self.collection.query(
-            query_embeddings=[query_embedding.tolist()],
-            n_results=top_k,
-        )
+        if user_id:
+            where["user_id"] = user_id
+
+        if chat_id:
+            where["chat_id"] = chat_id
+
+        query_args = {
+            "query_embeddings": [query_embedding.tolist()],
+            "n_results": top_k,
+        }
+        if where:
+            query_args["where"] = where
+
+        results = self.collection.query(**query_args)
 
         return results
 
