@@ -30,8 +30,9 @@ def chat(
 
     try:
         answer = chat_engine.chat(
-            question=request.question
-        )
+                    question=request.question,
+                    user_id=str(current_user["_id"]),
+                )
 
         return ChatResponse(
             answer=answer
@@ -70,7 +71,12 @@ async def upload(
         documents = loader.load_document(save_path)
         chunks = splitter.split_documents(documents)
         embeddings = embedding_manager.generate_embeddings(chunks)
-        vector_store.add_documents(chunks, embeddings)
+        vector_store.add_documents(
+            chunks=chunks,
+            embeddings=embeddings,
+            user_id=str(current_user["_id"]),
+            filename=file.filename,
+        )
 
         # Save document information to MongoDB
         document = {

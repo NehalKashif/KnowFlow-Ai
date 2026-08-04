@@ -58,14 +58,18 @@ class ChatEngine:
     def chat(
         self,
         question: str,
+        user_id: str,
+        chat_id: str | None = None,
         top_k: int = 5,
     ) -> str:
         """
         Complete RAG pipeline.
 
         Args:
-            question: User question.
-            top_k: Number of retrieved chunks.
+        question: User question.
+        user_id: Authenticated user's ID.
+        chat_id: Chat session ID (optional).
+        top_k: Number of retrieved chunks.
 
         Returns:
             LLM response.
@@ -75,6 +79,8 @@ class ChatEngine:
         retrieved_chunks = self.retriever.retrieve(
             query=question,
             top_k=top_k,
+            user_id=user_id,
+            chat_id=chat_id,
         )
 
         # Build prompt

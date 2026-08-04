@@ -37,6 +37,8 @@ class Retriever:
         self,
         query: str,
         top_k: int = 5,
+        user_id: str | None = None,
+        chat_id: str | None = None,
     ) -> List[Dict]:
         """
         Retrieve the top-k most relevant chunks.
@@ -44,6 +46,8 @@ class Retriever:
         Args:
             query: User question.
             top_k: Number of chunks to retrieve.
+            user_id: ID of the user.
+            chat_id: ID of the chat.
 
         Returns:
             List of retrieved chunks.
@@ -61,6 +65,8 @@ class Retriever:
         results = self.vector_store.similarity_search(
             query_embedding=query_embedding,
             top_k=top_k,
+            user_id=user_id,
+            chat_id=chat_id,
         )
 
         retrieved_chunks = []

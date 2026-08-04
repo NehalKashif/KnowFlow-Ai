@@ -6,7 +6,7 @@ using ChromaDB.
 """
 
 from typing import List
-
+import uuid
 import chromadb
 import numpy as np
 from langchain_core.documents import Document
@@ -84,16 +84,16 @@ class VectorStore:
 
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
 
-            ids.append(f"chunk_{current_count + i}")
+            ids.append(str(uuid.uuid4()))
 
             documents.append(chunk.page_content)
 
-            metadata = {
-                **chunk.metadata,
-                "user_id": user_id,
-                "chat_id": chat_id,
-                "filename": filename,
-            }
+            metadata = dict(chunk.metadata)
+            metadata["user_id"] = str(user_id)
+            metadata["filename"] = str(filename)
+            if chat_id is not None:
+                metadata["chat_id"] = str(chat_id)
+            
             metadatas.append(metadata)
 
             vectors.append(embedding.tolist())
