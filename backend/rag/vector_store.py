@@ -125,19 +125,31 @@ class VectorStore:
         Returns:
             ChromaDB query results.
         """
-        where = {}
+        where = None
 
-        if user_id:
-            where["user_id"] = user_id
+        if user_id and chat_id:
+            where = {
+                "$and": [
+                    {"user_id": user_id},
+                    {"chat_id": chat_id},
+                ]
+            }
 
-        if chat_id:
-            where["chat_id"] = chat_id
+        elif user_id:
+            where = {
+                "user_id": user_id
+            }
+
+        elif chat_id:
+            where = {
+                "chat_id": chat_id
+            }
 
         query_args = {
             "query_embeddings": [query_embedding.tolist()],
             "n_results": top_k,
         }
-        if where:
+        if where is not None:
             query_args["where"] = where
 
         results = self.collection.query(**query_args)

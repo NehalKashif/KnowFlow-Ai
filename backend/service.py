@@ -5,6 +5,7 @@ from rag.vector_store import VectorStore
 from rag.retriever import Retriever
 from rag.prompt_builder import PromptBuilder
 from rag.chat_engine import ChatEngine
+from services.message_service import MessageService
 import os
 from dotenv import load_dotenv
 
@@ -23,8 +24,11 @@ retriever = Retriever(embedding_manager, vector_store)
 
 prompt_builder = PromptBuilder()
 
+message_service = MessageService()
+
 chat_engine = ChatEngine(
     retriever=retriever,
     prompt_builder=prompt_builder,
-    api_key=os.getenv("GROQ_API_KEY")
+    api_key=os.getenv("GROQ_API_KEY"),
+    message_service=message_service,
 )

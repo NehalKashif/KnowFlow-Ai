@@ -23,33 +23,25 @@ ALLOWED_EXTENSIONS = {
     ".md",
 }
 
-@router.post("/chat")
-def chat(
-    request: ChatRequest,
-    current_user=Depends(get_current_user)
+
+@router.post("/chat/session")
+def create_chat(
+    request: CreateChatRequest,
+    current_user=Depends(get_current_user),
 ):
 
-    try:
-        answer = chat_engine.chat(
-                    question=request.question,
-                    user_id=str(current_user["_id"]),
-                )
+    chat = ChatService.create_chat(
+        user_id=str(current_user["_id"]),
+        title=request.title,
+    )
 
-        return ChatResponse(
-            answer=answer
-        )
+    return chat
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
-
-
-@router.post("/upload")
+@router.post("/chat/{chat_id}/upload")
 async def upload(
+    chat_id: str,
     file: UploadFile = File(...),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     """
     Upload a PDF and save it to the uploads folder.
@@ -77,11 +69,13 @@ async def upload(
             embeddings=embeddings,
             user_id=str(current_user["_id"]),
             filename=file.filename,
+            chat_id=chat_id
         )
 
         # Save document information to MongoDB
         document = {
                 "user_id": current_user["_id"],
+                "chat_id": chat_id,
                 "filename": file.filename,
                 "document_path": str(save_path),
                 "chunks": len(chunks),
@@ -109,15 +103,28 @@ async def upload(
         "Vector Store Count": vector_store.count(),
     }
 
-@router.post("/chat/session")
-def create_chat(
-    request: CreateChatRequest,
+
+@router.post("/chat/{chat_id}")
+def chat(
+    chat_id: str,
+    request: ChatRequest,
     current_user=Depends(get_current_user),
 ):
 
-    chat = ChatService.create_chat(
-        user_id=str(current_user["_id"]),
-        title=request.title,
-    )
+    try:
+        answer = chat_engine.chat(
+                    question=request.question,
+                    user_id=str(current_user["_id"]),
+                    chat_id=chat_id,
+                    top_k=request.top_k,
+                )
 
-    return chat
+        return ChatResponse(
+            answer=answer
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
