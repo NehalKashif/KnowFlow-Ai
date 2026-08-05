@@ -9,6 +9,7 @@ from auth.dependencies import get_current_user
 from datetime import datetime
 from databases.mongodb import documents_collection
 from services.chat_service import ChatService
+from services.message_service import MessageService
 
 router = APIRouter()
 
@@ -136,3 +137,10 @@ def get_chat_sessions(
     return ChatService.get_user_chats(
         user_id=str(current_user["_id"])
     )
+
+@router.get("/chat/{chat_id}/messages")
+def get_messages(
+    chat_id: str,
+    current_user=Depends(get_current_user),
+):
+    return MessageService.get_messages(chat_id)
