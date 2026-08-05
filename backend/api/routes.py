@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from api.schemas import ChatRequest, ChatResponse, CreateChatRequest, ChatSessionResponse
+from api.schemas import ChatRequest, ChatResponse, CreateChatRequest, ChatSessionResponse, UploadResponse, MessageResponse
 from service import loader, splitter, embedding_manager, vector_store
 from service import chat_engine
 from fastapi import Depends
@@ -25,7 +25,10 @@ ALLOWED_EXTENSIONS = {
 }
 
 
-@router.post("/chat/session")
+@router.post(
+    "/chat/session",
+    response_model=ChatSessionResponse,
+)
 def create_chat(
     request: CreateChatRequest,
     current_user=Depends(get_current_user),
@@ -36,9 +39,12 @@ def create_chat(
         title=request.title,
     )
 
-    return chat
+    return ChatSessionResponse(**chat)
 
-@router.post("/chat/{chat_id}/upload")
+@router.post(
+    "/chat/{chat_id}/upload",
+    response_model=UploadResponse,
+)
 async def upload(
     chat_id: str,
     file: UploadFile = File(...),
@@ -95,17 +101,20 @@ async def upload(
     finally:
         file.file.close()
 
-    return {
-        "message": "File uploaded successfully.",
-        "filename": file.filename,
-        "Document Name": documents[0].metadata.get("source", "Unknown"),
-        "Chunks Created": len(chunks),
-        "Embeddings Generated": len(embeddings),
-        "Vector Store Count": vector_store.count(),
-    }
+    return UploadResponse(
+        message="File uploaded successfully.",
+        filename=file.filename,
+        document_name=documents[0].metadata.get("source", "Unknown"),
+        chunks_created=len(chunks),
+        embeddings_generated=len(embeddings),
+        vector_store_count=vector_store.count(),
+    )
 
 
-@router.post("/chat/{chat_id}")
+@router.post(
+    "/chat/{chat_id}",
+    response_model=ChatResponse,
+)
 def chat(
     chat_id: str,
     request: ChatRequest,
@@ -130,7 +139,10 @@ def chat(
             detail=str(e)
         )
 
-@router.get("/chat/sessions")
+@router.get(
+    "/chat/sessions",
+    response_model=list[ChatSessionResponse],
+)
 def get_chat_sessions(
     current_user=Depends(get_current_user),
 ):
@@ -138,7 +150,10 @@ def get_chat_sessions(
         user_id=str(current_user["_id"])
     )
 
-@router.get("/chat/{chat_id}/messages")
+@router.get(
+    "/chat/{chat_id}/messages",
+    response_model=list[MessageResponse],
+)
 def get_messages(
     chat_id: str,
     current_user=Depends(get_current_user),
