@@ -123,3 +123,28 @@ class ChatService:
         )
 
         return True
+    
+
+    @staticmethod
+    def rename_chat(
+        user_id: str,
+        chat_id: str,
+        title: str,
+    ):
+        """
+        Rename a chat session.
+        """
+
+        result = chat_sessions_collection.update_one(
+            {
+                "_id": ObjectId(chat_id),
+                "user_id": user_id,
+            },
+            {
+                "$set": {
+                    "title": title,
+                }
+            },
+        )
+
+        return result.modified_count > 0

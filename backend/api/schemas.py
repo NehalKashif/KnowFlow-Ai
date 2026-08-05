@@ -79,3 +79,10 @@ class LoginResponse(BaseModel):
 
 class DeleteResponse(BaseModel):
     message: str
+
+class RenameChatRequest(BaseModel):
+    title: str
+
+
+class RenameChatResponse(BaseModel):
+    message: str
