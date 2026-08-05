@@ -86,3 +86,8 @@ class RenameChatRequest(BaseModel):
 
 class RenameChatResponse(BaseModel):
     message: str
+
+class DocumentResponse(BaseModel):
+    id: str
+    filename: str
+    uploaded_at: datetime

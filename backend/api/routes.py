@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from api.schemas import ChatRequest, ChatResponse, CreateChatRequest, ChatSessionResponse, UploadResponse, MessageResponse, DeleteResponse, RenameChatRequest, RenameChatResponse
+from api.schemas import ChatRequest, ChatResponse, CreateChatRequest, ChatSessionResponse, UploadResponse, MessageResponse, DeleteResponse, RenameChatRequest, RenameChatResponse, DocumentResponse
 from service import loader, splitter, embedding_manager, vector_store
 from service import chat_engine
 from fastapi import Depends
@@ -10,6 +10,7 @@ from datetime import datetime
 from databases.mongodb import documents_collection
 from services.chat_service import ChatService
 from services.message_service import MessageService
+from services.document_service import DocumentService
 
 router = APIRouter()
 
@@ -206,4 +207,18 @@ def rename_chat(
 
     return RenameChatResponse(
         message="Chat renamed successfully."
+    )
+
+@router.get(
+    "/chat/{chat_id}/documents",
+    response_model=list[DocumentResponse],
+)
+def get_documents(
+    chat_id: str,
+    current_user=Depends(get_current_user),
+):
+
+    return DocumentService.get_documents(
+        user_id=str(current_user["_id"]),
+        chat_id=chat_id,
     )
