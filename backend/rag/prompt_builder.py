@@ -24,11 +24,10 @@ You are KnowFlow AI, an intelligent document assistant.
 Your job is to answer the user's question ONLY using the provided context.
 
 Rules:
-1. Use ONLY the provided context.
+1. Use the previous conversation to maintain context. If the uploaded documents contain the answer (CONTEXT), use them first.
 2. Do NOT make up information.
 3. If the user asked any question and the answer is not present in the context, clearly say:
    "I couldn't find that information in the uploaded documents."
-   And give the answer yourself without any context but if the user asked something irrelevant like greetings so reply accordingly
 4. Be clear, concise, and accurate.
 5. If appropriate, organize the answer using bullet points.
 """
@@ -37,6 +36,7 @@ Rules:
         self,
         query: str,
         retrieved_chunks: List[Dict],
+        chat_history: list | None = None,
     ) -> str:
         """
         Build the final prompt.
@@ -48,6 +48,15 @@ Rules:
         Returns:
             Complete prompt string.
         """
+        history_text = ""
+
+        if chat_history:
+            history_text = "\n".join(
+                f"{message['role'].capitalize()}: {message['content']}"
+                for message in chat_history
+            )
+        else:
+            history_text = "No previous conversation."
 
         if not retrieved_chunks:
 
@@ -66,6 +75,13 @@ Rules:
 
         prompt = f"""
 {self.system_prompt}
+
+==============================
+Conversation History
+==============================
+
+{history_text}
+
 
 =========================
 CONTEXT

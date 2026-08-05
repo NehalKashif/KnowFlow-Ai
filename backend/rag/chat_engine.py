@@ -83,15 +83,7 @@ class ChatEngine:
             LLM response.
         """
 
-        # -----------------------------
-        # Save user's message
-        # -----------------------------
-        if chat_id:
-            self.message_service.save_message(
-                chat_id=chat_id,
-                role="user",
-                content=question,
-            )
+        chat_history = self.message_service.get_chat_history(chat_id=chat_id)
 
         # -----------------------------
         # Retrieve relevant chunks
@@ -104,11 +96,22 @@ class ChatEngine:
         )
 
         # -----------------------------
+        # Save user's message
+        # -----------------------------
+        if chat_id:
+            self.message_service.save_message(
+                chat_id=chat_id,
+                role="user",
+                content=question,
+            )
+
+        # -----------------------------
         # Build prompt
         # -----------------------------
         prompt = self.prompt_builder.build_prompt(
             query=question,
             retrieved_chunks=retrieved_chunks,
+            chat_history=chat_history,
         )
 
         # -----------------------------
