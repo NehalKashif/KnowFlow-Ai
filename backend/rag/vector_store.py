@@ -201,3 +201,23 @@ class VectorStore:
         )
 
         print("Collection has been reset successfully.")
+
+    def delete_chat_vectors(
+        self,
+        user_id: str,
+        chat_id: str,
+    ):
+        """
+        Delete all vectors belonging to a specific chat.
+        """
+
+        self.collection.delete(
+            where={
+                "$and": [
+                    {"user_id": user_id},
+                    {"chat_id": chat_id},
+                ]
+            }
+        )
+
+        print(f"Deleted vectors of chat {chat_id}")
