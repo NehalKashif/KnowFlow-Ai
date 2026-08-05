@@ -221,3 +221,23 @@ class VectorStore:
         )
 
         print(f"Deleted vectors of chat {chat_id}")
+
+    def delete_document_vectors(
+        self,
+        user_id: str,
+        chat_id: str,
+        filename: str,
+    ):
+        """
+        Delete vectors belonging to a specific document.
+        """
+
+        self.collection.delete(
+            where={
+                "$and": [
+                    {"user_id": user_id},
+                    {"chat_id": chat_id},
+                    {"filename": filename},
+                ]
+            }
+        )

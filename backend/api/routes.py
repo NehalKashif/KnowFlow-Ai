@@ -222,3 +222,27 @@ def get_documents(
         user_id=str(current_user["_id"]),
         chat_id=chat_id,
     )
+
+@router.delete(
+    "/documents/{document_id}",
+    response_model=DeleteResponse,
+)
+def delete_document(
+    document_id: str,
+    current_user=Depends(get_current_user),
+):
+
+    deleted = DocumentService.delete_document(
+        user_id=str(current_user["_id"]),
+        document_id=document_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found.",
+        )
+
+    return DeleteResponse(
+        message="Document deleted successfully."
+    )
