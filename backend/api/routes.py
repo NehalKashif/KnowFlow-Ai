@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from api.schemas import ChatRequest, ChatResponse, CreateChatRequest, ChatSessionResponse, UploadResponse, MessageResponse
+from api.schemas import ChatRequest, ChatResponse, CreateChatRequest, ChatSessionResponse, UploadResponse, MessageResponse, DeleteResponse
 from service import loader, splitter, embedding_manager, vector_store
 from service import chat_engine
 from fastapi import Depends
@@ -159,3 +159,26 @@ def get_messages(
     current_user=Depends(get_current_user),
 ):
     return MessageService.get_messages(chat_id)
+
+@router.delete(
+    "/chat/{chat_id}",
+    response_model=DeleteResponse,
+)
+def delete_chat(
+    chat_id: str,
+    current_user=Depends(get_current_user),
+):
+    deleted = ChatService.delete_chat(
+        user_id=str(current_user["_id"]),
+        chat_id=chat_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Chat not found.",
+        )
+
+    return DeleteResponse(
+        message="Chat deleted successfully."
+    )
