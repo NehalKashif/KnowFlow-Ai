@@ -8,7 +8,7 @@ from datetime import datetime
 from bson import ObjectId
 
 from databases.mongodb import messages_collection
-
+from typing import List
 
 class MessageService:
     """
@@ -141,3 +141,39 @@ class MessageService:
         return messages_collection.count_documents(
             {"chat_id": chat_id}
         )
+    
+    @staticmethod
+    def get_chat_history(
+        chat_id: str,
+        limit: int = 20,
+    ) -> List[dict]:
+        """
+        Retrieve the previous messages of a chat.
+
+        Args:
+            chat_id: Chat session ID.
+            limit: Maximum number of messages.
+
+        Returns:
+            List of messages ordered by creation time.
+        """
+
+        messages = list(
+            messages_collection.find(
+                {"chat_id": chat_id}
+            )
+            .sort("created_at", 1)
+            .limit(limit)
+        )
+
+        history = []
+
+        for message in messages:
+            history.append(
+                {
+                    "role": message["role"],
+                    "content": message["content"],
+                }
+            )
+
+        return history
