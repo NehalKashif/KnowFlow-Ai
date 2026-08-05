@@ -26,8 +26,7 @@ ALLOWED_EXTENSIONS = {
 
 
 @router.post(
-    "/chat/session",
-    response_model=ChatSessionResponse,
+    "/chat/session"
 )
 def create_chat(
     request: CreateChatRequest,
@@ -39,7 +38,7 @@ def create_chat(
         title=request.title,
     )
 
-    return ChatSessionResponse(**chat)
+    return chat
 
 @router.post(
     "/chat/{chat_id}/upload",
