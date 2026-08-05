@@ -128,3 +128,11 @@ def chat(
             status_code=500,
             detail=str(e)
         )
+
+@router.get("/chat/sessions")
+def get_chat_sessions(
+    current_user=Depends(get_current_user),
+):
+    return ChatService.get_user_chats(
+        user_id=str(current_user["_id"])
+    )
