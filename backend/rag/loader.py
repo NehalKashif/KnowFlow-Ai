@@ -13,12 +13,16 @@ Supported formats:
 from pathlib import Path
 from typing import List
 
+import logging
+
 from langchain_core.documents import Document
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
     Docx2txtLoader,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentLoader:
@@ -104,9 +108,11 @@ class DocumentLoader:
                 docs = self.load_document(str(file))
                 all_documents.extend(docs)
 
-                print(f"✓ Loaded {file.name}")
+                logger = logging.getLogger(__name__)
+                logger.info(f"✓ Loaded {file.name}")
 
             except Exception as e:
-                print(f"✗ Failed to load {file.name}: {e}")
+                logger = logging.getLogger(__name__)
+                logger.exception(f"✗ Failed to load {file.name}: {e}")
 
         return all_documents

@@ -1,5 +1,9 @@
 from auth.jwt_handler import JWTManager
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 token = JWTManager.create_access_token(
     {
         "sub": "123456",
@@ -7,8 +11,8 @@ token = JWTManager.create_access_token(
     }
 )
 
-print("Token:")
-print(token)
+logger.info("Token:")
+logger.info(token)
 
-print("\nDecoded Payload:")
-print(JWTManager.verify_token(token))
+logger.info("\nDecoded Payload:")
+logger.info(JWTManager.verify_token(token))

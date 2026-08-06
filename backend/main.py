@@ -1,7 +1,10 @@
+import logging
 from fastapi import FastAPI
 
 from api.routes import router
 from api.auth import router as auth_router
+
+logging.basicConfig(level=logging.INFO)
 
 myapp = FastAPI(
     title="KnowFlow AI",

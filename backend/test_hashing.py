@@ -1,22 +1,26 @@
 from auth.hashing import PasswordManager
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 password = "Nehal123"
 
 hashed = PasswordManager.hash_password(password)
 
-print("Hashed Password:")
-print(hashed)
+logger.info("Hashed Password:")
+logger.info(hashed)
 
-print()
+logger.info("")
 
-print(
+logger.info(
     PasswordManager.verify_password(
         "Nehal123",
         hashed,
     )
 )
 
-print(
+logger.info(
     PasswordManager.verify_password(
         "WrongPassword",
         hashed,

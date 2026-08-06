@@ -6,10 +6,13 @@ using ChromaDB.
 """
 
 from typing import List
+import logging
 import uuid
 import chromadb
 import numpy as np
 from langchain_core.documents import Document
+
+logger = logging.getLogger(__name__)
 
 
 class VectorStore:
@@ -46,11 +49,11 @@ class VectorStore:
             }
         )
 
-        print("=" * 50)
-        print("Vector Store Initialized")
-        print(f"Collection Name : {self.collection_name}")
-        print(f"Stored Chunks   : {self.collection.count()}")
-        print("=" * 50)
+        logger.info("=" * 50)
+        logger.info("Vector Store Initialized")
+        logger.info(f"Collection Name : {self.collection_name}")
+        logger.info(f"Stored Chunks   : {self.collection.count()}")
+        logger.info("=" * 50)
 
     def add_documents(
             self,
@@ -105,8 +108,8 @@ class VectorStore:
             metadatas=metadatas,
         )
 
-        print(f"Successfully stored {len(chunks)} chunks.")
-        print(f"Total Chunks : {self.collection.count()}")
+        logger.info(f"Successfully stored {len(chunks)} chunks.")
+        logger.info(f"Total Chunks : {self.collection.count()}")
 
     def similarity_search(
         self,
@@ -183,7 +186,7 @@ class VectorStore:
 
         self.collection.delete(ids=[document_id])
 
-        print(f"Deleted document: {document_id}")
+        logger.info(f"Deleted document: {document_id}")
 
     def reset(self):
         """
@@ -200,7 +203,7 @@ class VectorStore:
             }
         )
 
-        print("Collection has been reset successfully.")
+        logger.info("Collection has been reset successfully.")
 
     def delete_chat_vectors(
         self,
@@ -220,7 +223,7 @@ class VectorStore:
             }
         )
 
-        print(f"Deleted vectors of chat {chat_id}")
+        logger.info(f"Deleted vectors of chat {chat_id}")
 
     def delete_document_vectors(
         self,

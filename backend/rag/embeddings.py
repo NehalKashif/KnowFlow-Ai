@@ -7,9 +7,12 @@ Sentence Transformers.
 
 from typing import List
 
+import logging
 import numpy as np
 from langchain_core.documents import Document
 from sentence_transformers import SentenceTransformer
+
+logger = logging.getLogger(__name__)
 
 
 class EmbeddingManager:
@@ -30,7 +33,7 @@ class EmbeddingManager:
 
         self.model_name = model_name
 
-        print(f"Loading embedding model: {self.model_name}")
+        logger.info(f"Loading embedding model: {self.model_name}")
 
         self.model = SentenceTransformer(self.model_name)
 
@@ -38,8 +41,8 @@ class EmbeddingManager:
             self.model.get_sentence_embedding_dimension()
         )
 
-        print("Embedding model loaded successfully.")
-        print(f"Embedding Dimension: {self.embedding_dimension}")
+        logger.info("Embedding model loaded successfully.")
+        logger.info(f"Embedding Dimension: {self.embedding_dimension}")
 
     def generate_embeddings(
         self,
@@ -60,7 +63,7 @@ class EmbeddingManager:
 
         texts = [doc.page_content for doc in documents]
 
-        print(f"Generating embeddings for {len(texts)} chunks...")
+        logger.info(f"Generating embeddings for {len(texts)} chunks...")
 
         embeddings = self.model.encode(
             texts,
@@ -69,7 +72,7 @@ class EmbeddingManager:
             normalize_embeddings=True,
         )
 
-        print(f"Generated {len(embeddings)} embeddings.")
+        logger.info(f"Generated {len(embeddings)} embeddings.")
 
         return embeddings
 

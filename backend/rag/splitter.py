@@ -7,8 +7,12 @@ smaller chunks for embedding.
 
 from typing import List
 
+import logging
+
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentSplitter:
@@ -61,7 +65,7 @@ class DocumentSplitter:
 
         chunks = self.text_splitter.split_documents(documents)
 
-        print(f"Original Documents : {len(documents)}")
-        print(f"Generated Chunks   : {len(chunks)}")
+        logger.info(f"Original Documents : {len(documents)}")
+        logger.info(f"Generated Chunks   : {len(chunks)}")
 
         return chunks
