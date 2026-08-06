@@ -95,9 +95,11 @@ class Retriever:
         self,
         user_id: str,
         chat_id: str,
+        max_chunks: int = 20,
     ):
         """
-        Retrieve all chunks of the document.
+        Retrieve the first N chunks of a document for
+        document-level tasks like summarization.
         """
 
         results = self.vector_store.get_chat_documents(
@@ -105,19 +107,23 @@ class Retriever:
             chat_id=chat_id,
         )
 
-        retrieved = []
+        retrieved_chunks = []
 
-        docs = results.get("documents", [])
-        metas = results.get("metadatas", [])
+        documents = results.get("documents", [])
+        metadatas = results.get("metadatas", [])
 
-        for doc, meta in zip(docs, metas):
+        # Limit the number of chunks
+        documents = documents[:max_chunks]
+        metadatas = metadatas[:max_chunks]
 
-            retrieved.append(
+        for doc, metadata in zip(documents, metadatas):
+
+            retrieved_chunks.append(
                 {
                     "content": doc,
-                    "metadata": meta,
+                    "metadata": metadata,
                     "distance": 0,
                 }
             )
 
-        return retrieved
+        return retrieved_chunks
