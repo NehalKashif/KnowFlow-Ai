@@ -4,7 +4,10 @@ from langchain_core.messages import HumanMessage
 from rag.retriever import Retriever
 from rag.prompt_builder import PromptBuilder
 from services.message_service import MessageService
-
+from rag.intent_classifier import (
+    IntentClassifier,
+    QueryIntent,
+)
 
 class ChatEngine:
     """
@@ -56,7 +59,7 @@ class ChatEngine:
         self.retriever = retriever
         self.prompt_builder = prompt_builder
         self.message_service = message_service
-
+        self.intent_classifier = IntentClassifier()
         self.llm = ChatGroq(
             api_key=api_key,
             model=model_name,
@@ -88,12 +91,23 @@ class ChatEngine:
         # -----------------------------
         # Retrieve relevant chunks
         # -----------------------------
-        retrieved_chunks = self.retriever.retrieve(
-            query=question,
-            top_k=top_k,
-            user_id=user_id,
-            chat_id=chat_id,
-        )
+        intent = self.intent_classifier.classify(question)
+
+        if intent == QueryIntent.DOCUMENT:
+
+            retrieved_chunks = self.retriever.retrieve_document(
+                user_id=user_id,
+                chat_id=chat_id,
+            )
+
+        else:
+
+            retrieved_chunks = self.retriever.retrieve(
+                query=question,
+                user_id=user_id,
+                chat_id=chat_id,
+                top_k=top_k,
+            )
 
         # -----------------------------
         # Save user's message

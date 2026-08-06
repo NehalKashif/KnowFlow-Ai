@@ -90,3 +90,34 @@ class Retriever:
             )
 
         return retrieved_chunks
+
+    def retrieve_document(
+        self,
+        user_id: str,
+        chat_id: str,
+    ):
+        """
+        Retrieve all chunks of the document.
+        """
+
+        results = self.vector_store.get_chat_documents(
+            user_id=user_id,
+            chat_id=chat_id,
+        )
+
+        retrieved = []
+
+        docs = results.get("documents", [])
+        metas = results.get("metadatas", [])
+
+        for doc, meta in zip(docs, metas):
+
+            retrieved.append(
+                {
+                    "content": doc,
+                    "metadata": meta,
+                    "distance": 0,
+                }
+            )
+
+        return retrieved

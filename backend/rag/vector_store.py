@@ -244,3 +244,21 @@ class VectorStore:
                 ]
             }
         )
+
+    def get_chat_documents(
+        self,
+        user_id: str,
+        chat_id: str,
+    ):
+        """
+        Return every chunk belonging to a chat.
+        """
+
+        return self.collection.get(
+            where={
+                "$and": [
+                    {"user_id": user_id},
+                    {"chat_id": chat_id},
+                ]
+            }
+        )
