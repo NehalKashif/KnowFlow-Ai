@@ -12,7 +12,6 @@ Supported formats:
 
 from pathlib import Path
 from typing import List
-
 import logging
 
 from langchain_core.documents import Document
@@ -57,7 +56,6 @@ class DocumentLoader:
             raise FileNotFoundError(f"{file_path} does not exist.")
 
         suffix = path.suffix.lower()
-
         if suffix == ".pdf":
             loader = PyMuPDFLoader(str(path))
 
