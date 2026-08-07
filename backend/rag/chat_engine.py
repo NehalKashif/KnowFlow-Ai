@@ -109,6 +109,34 @@ class ChatEngine:
                 top_k=top_k,
             )
 
+        sources = []
+
+        for chunk in retrieved_chunks:
+
+            metadata = chunk["metadata"]
+
+            sources.append({
+                "filename": metadata.get("filename"),
+                "page": str(metadata.get("page"))
+            })
+
+        unique_sources = []
+
+        seen = set()
+
+        for source in sources:
+
+            key = (
+                source["filename"],
+                source["page"],
+            )
+
+            if key not in seen:
+
+                seen.add(key)
+
+                unique_sources.append(source)
+
         # -----------------------------
         # Save user's message
         # -----------------------------
@@ -146,5 +174,9 @@ class ChatEngine:
                 role="assistant",
                 content=answer,
             )
-
-        return answer
+        
+        print(unique_sources)
+        return {
+            "answer": answer,
+            "sources": unique_sources
+        }

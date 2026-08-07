@@ -10,8 +10,14 @@ class ChatRequest(BaseModel):
     top_k: int = 5
 
 
+class SourceResponse(BaseModel):
+    filename: str
+    page: str
+
+
 class ChatResponse(BaseModel):
     answer: str
+    sources: list[SourceResponse]
 
 
 class CreateChatRequest(BaseModel):

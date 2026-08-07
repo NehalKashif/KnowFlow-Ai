@@ -140,7 +140,7 @@ def chat(
 ):
 
     try:
-        answer = chat_engine.chat(
+        result = chat_engine.chat(
                     question=request.question,
                     user_id=str(current_user["_id"]),
                     chat_id=chat_id,
@@ -148,7 +148,8 @@ def chat(
                 )
 
         return ChatResponse(
-            answer=answer
+            answer=result["answer"],
+            sources=result["sources"],
         )
 
     except Exception as e:
