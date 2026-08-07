@@ -11,6 +11,7 @@ from databases.mongodb import documents_collection
 from services.chat_service import ChatService
 from services.message_service import MessageService
 from services.document_service import DocumentService
+from utils.file_hash import calculate_file_hash
 
 router = APIRouter()
 
@@ -68,6 +69,22 @@ async def upload(
         with open(save_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        file_hash = calculate_file_hash(save_path)
+        existing_document = documents_collection.find_one(
+            {
+                "user_id": current_user["_id"],
+                "chat_id": chat_id,
+                "file_hash": file_hash,
+            })
+
+        if existing_document:
+            save_path.unlink(missing_ok=True)
+
+            raise HTTPException(
+                status_code=400,
+                detail="This document has already been uploaded."
+            )
+
         documents = loader.load_document(save_path)
         chunks = splitter.split_documents(documents)
         embeddings = embedding_manager.generate_embeddings(chunks)
@@ -84,6 +101,7 @@ async def upload(
                 "user_id": current_user["_id"],
                 "chat_id": chat_id,
                 "filename": file.filename,
+                "file_hash": file_hash,
                 "document_path": str(save_path),
                 "chunks": len(chunks),
                 "uploaded_at": datetime.utcnow(),
