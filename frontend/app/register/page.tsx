@@ -7,12 +7,69 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
-    // Backend registration will be connected later.
-    console.log("Registration submitted");
-  };
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        setError("");
+        setSuccess("");
+
+        // Check passwords
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch(
+            "http://127.0.0.1:8000/auth/register",
+            {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                name,
+                email,
+                password,
+                }),
+            }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+            setError(data.detail || "Registration failed.");
+            return;
+            }
+
+            setSuccess(data.message || "Account created successfully.");
+
+            // Clear form
+            setName("");
+            setEmail("");
+            setPassword("");
+            setConfirmPassword("");
+
+        } catch (error) {
+            console.error(error);
+            setError(
+            "Unable to connect to the server. Please make sure the backend is running."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
   return (
     <main className="min-h-screen bg-[#080b16] text-slate-100">
@@ -119,6 +176,18 @@ export default function RegisterPage() {
               </p>
             </div>
 
+            {error && (
+                <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                </div>
+                )}
+
+                {success && (
+                <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                    {success}
+                </div>
+            )}
+
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name */}
@@ -134,7 +203,9 @@ export default function RegisterPage() {
                   id="name"
                   name="name"
                   type="text"
-                  placeholder="Nehal Kashif"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
                   className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-indigo-500/50 focus:bg-white/[0.04] focus:ring-2 focus:ring-indigo-500/10"
                 />
@@ -154,6 +225,8 @@ export default function RegisterPage() {
                   name="email"
                   type="email"
                   placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-indigo-500/50 focus:bg-white/[0.04] focus:ring-2 focus:ring-indigo-500/10"
                 />
@@ -174,6 +247,8 @@ export default function RegisterPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a strong password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 pr-12 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-indigo-500/50 focus:bg-white/[0.04] focus:ring-2 focus:ring-indigo-500/10"
                   />
@@ -203,6 +278,8 @@ export default function RegisterPage() {
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Repeat your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 pr-12 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-indigo-500/50 focus:bg-white/[0.04] focus:ring-2 focus:ring-indigo-500/10"
                   />
@@ -240,9 +317,10 @@ export default function RegisterPage() {
               {/* Submit */}
               <button
                 type="submit"
-                className="h-12 w-full rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500 text-sm font-semibold text-white shadow-lg shadow-indigo-500/10 transition duration-200 hover:-translate-y-0.5 hover:shadow-indigo-500/20"
-              >
-                Create Account
+                disabled={loading}
+                className="h-12 w-full rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500 text-sm font-semibold text-white shadow-lg shadow-indigo-500/10 transition duration-200 hover:-translate-y-0.5 hover:shadow-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                {loading ? "Creating Account..." : "Create Account"}
               </button>
             </form>
 
