@@ -16,3 +16,10 @@ chroma_db/
 
 # VS Code
 .vscode/
+
+#Frontend
+node_modules/
+.next/
+out/
+.env.local
+.env.*.local
