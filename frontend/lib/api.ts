@@ -31,3 +31,13 @@ export async function apiFetch(
 
   return response;
 }
+
+export async function getCurrentUser() {
+  const response = await apiFetch("/auth/me");
+
+  if (!response.ok) {
+    throw new Error("Failed to get current user.");
+  }
+
+  return response.json();
+}
