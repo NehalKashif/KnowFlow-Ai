@@ -41,3 +41,22 @@ export async function getCurrentUser() {
 
   return response.json();
 }
+
+export async function createChat(title: string) {
+  const response = await apiFetch("/chat/session", {
+    method: "POST",
+    body: JSON.stringify({
+      title,
+    }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+
+    throw new Error(
+      data.detail || "Failed to create chat."
+    );
+  }
+
+  return response.json();
+}

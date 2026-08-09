@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeToken } from "@/lib/auth";
+import { createChat } from "@/lib/api";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -12,7 +13,15 @@ export default function Sidebar() {
     removeToken();
     router.replace("/login");
   };
+  const handleNewChat = async () => {
+    try {
+        const chat = await createChat("New Chat");
 
+        router.push(`/chat/${chat.id}`);
+    } catch (error) {
+        console.error("Failed to create chat:", error);
+    }
+  };
   const navigation = [
     {
       name: "Dashboard",
@@ -47,10 +56,11 @@ export default function Sidebar() {
       {/* New Chat */}
       <div className="px-4 pt-5">
         <button
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-black transition hover:bg-cyan-400"
-        >
-          <span className="text-lg">+</span>
-          New Chat
+            onClick={handleNewChat}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-black transition hover:bg-cyan-400"
+            >
+            <span className="text-lg">+</span>
+            New Chat
         </button>
       </div>
 
