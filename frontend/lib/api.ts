@@ -60,3 +60,17 @@ export async function createChat(title: string) {
 
   return response.json();
 }
+
+export async function getChatSessions() {
+  const response = await apiFetch("/chat/sessions");
+
+  if (!response.ok) {
+    const data = await response.json();
+
+    throw new Error(
+      data.detail || "Failed to fetch chat history."
+    );
+  }
+
+  return response.json();
+}
