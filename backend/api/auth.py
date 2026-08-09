@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, status
+from auth.dependencies import get_current_user
+from fastapi import Depends
 
 from api.schemas import (
     RegisterRequest,
@@ -101,3 +103,11 @@ def login(request: LoginRequest):
     return LoginResponse(
         access_token=access_token
     )
+
+@router.get("/me")
+def get_me(current_user=Depends(get_current_user)):
+    return {
+        "id": str(current_user["_id"]),
+        "name": current_user["name"],
+        "email": current_user["email"],
+    }
