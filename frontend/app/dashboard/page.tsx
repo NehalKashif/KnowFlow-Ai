@@ -1,10 +1,38 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getToken, removeToken } from "@/lib/auth";
+
 export default function DashboardPage() {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("access_token")
-      : null;
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const token = getToken();
+
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+
+    setCheckingAuth(false);
+  }, [router]);
+
+  const handleLogout = () => {
+    removeToken();
+    router.replace("/login");
+  };
+
+  if (checkingAuth) {
+    return (
+      <main className="min-h-screen bg-[#07111f] flex items-center justify-center">
+        <p className="text-gray-400">
+          Checking authentication...
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#07111f] flex items-center justify-center">
@@ -14,14 +42,15 @@ export default function DashboardPage() {
         </h1>
 
         <p className="mt-4 text-gray-400">
-          Dashboard
+          You are authenticated.
         </p>
 
-        <p className="mt-2 text-sm text-green-400">
-          {token
-            ? "You are authenticated."
-            : "No authentication token found."}
-        </p>
+        <button
+          onClick={handleLogout}
+          className="mt-6 rounded-xl bg-red-500 px-6 py-3 font-semibold text-white hover:bg-red-400"
+        >
+          Logout
+        </button>
       </div>
     </main>
   );
