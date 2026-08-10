@@ -128,6 +128,33 @@ async def upload(
         vector_store_count=vector_store.count(),
     )
 
+@router.get(
+    "/chat/{chat_id}",
+    response_model=ChatSessionResponse,
+)
+def get_chat(
+    chat_id: str,
+    current_user=Depends(get_current_user),
+):
+    try:
+        chat = ChatService.get_chat(
+                user_id=str(current_user["_id"]),
+                chat_id=chat_id,
+            )
+        
+        if not chat:
+            raise HTTPException(
+                status_code=404,
+                detail="Chat not found.",
+            )
+        
+        return chat
+    except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=str(e)
+            )
+    
 
 @router.post(
     "/chat/{chat_id}",
