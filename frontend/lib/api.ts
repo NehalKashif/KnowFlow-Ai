@@ -74,3 +74,18 @@ export async function getChatSessions() {
 
   return response.json();
 }
+
+export async function getChat(chatId: string) {
+  const response = await apiFetch(`/chat/${chatId}`);
+  console.log(response, "RESPONSE FROM GET CHAT");
+  if (!response.ok) {
+    const data = await response.json();
+    console.log("Failed to load chat:", data);
+
+    throw new Error(
+      data.detail || "Failed to load chat."
+    );
+  }
+
+  return response.json();
+}

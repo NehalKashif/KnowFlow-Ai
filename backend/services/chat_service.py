@@ -53,6 +53,33 @@ class ChatService:
         return result
 
     @staticmethod
+    def get_chat(
+        user_id: str,
+        chat_id: str,
+    ):
+        try:
+            object_id = ObjectId(chat_id)
+        except Exception:
+            return None
+
+        chat = chat_sessions_collection.find_one(
+            {
+                "_id": object_id,
+                "user_id": user_id,
+            }
+        )
+
+
+        if not chat:
+            return None
+
+        return {
+            "id": str(chat["_id"]),
+            "title": chat["title"],
+            "created_at": chat["created_at"],
+        }
+
+    @staticmethod
     def delete_chat(
         user_id: str,
         chat_id: str,

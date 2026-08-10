@@ -12,6 +12,7 @@ from services.chat_service import ChatService
 from services.message_service import MessageService
 from services.document_service import DocumentService
 from utils.file_hash import calculate_file_hash
+from fastapi import status
 
 router = APIRouter()
 
@@ -127,33 +128,6 @@ async def upload(
         embeddings_generated=len(embeddings),
         vector_store_count=vector_store.count(),
     )
-
-@router.get(
-    "/chat/{chat_id}",
-    response_model=ChatSessionResponse,
-)
-def get_chat(
-    chat_id: str,
-    current_user=Depends(get_current_user),
-):
-    try:
-        chat = ChatService.get_chat(
-                user_id=str(current_user["_id"]),
-                chat_id=chat_id,
-            )
-        
-        if not chat:
-            raise HTTPException(
-                status_code=404,
-                detail="Chat not found.",
-            )
-        
-        return chat
-    except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=str(e)
-            )
     
 
 @router.post(
@@ -292,3 +266,26 @@ def delete_document(
     return DeleteResponse(
         message="Document deleted successfully."
     )
+
+
+@router.get(
+    "/chat/{chat_id}",
+    response_model=ChatSessionResponse,
+)
+def get_chat(
+    chat_id: str,
+    current_user=Depends(get_current_user),
+):
+    print("GETTING CHAT:", chat_id, "FOR USER:", str(current_user["_id"]))
+    chat = ChatService.get_chat(
+        user_id=str(current_user["_id"]),
+        chat_id=chat_id,
+    )
+
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found.",
+        )
+
+    return chat
