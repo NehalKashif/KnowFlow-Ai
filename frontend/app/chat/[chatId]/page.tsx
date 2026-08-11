@@ -6,13 +6,22 @@ import { useParams, useRouter } from "next/navigation";
 import Sidebar from "@/app/components/sidebar";
 import Topbar from "@/app/components/topbar";
 
-import { getChat } from "@/lib/api";
+import {
+    getChat,
+    getChatMessages,
+} from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
 interface Chat {
   id: string;
   title: string;
   created_at: string;
+}
+interface Message {
+    id: string;
+    role: string;
+    content: string;
+    created_at: string;
 }
 
 export default function ChatPage() {
@@ -22,6 +31,7 @@ export default function ChatPage() {
   const chatId = params.chatId as string;
 
   const [chat, setChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -35,9 +45,11 @@ export default function ChatPage() {
     
     const loadChat = async () => {
       try {
-        const data = await getChat(chatId);
+        const chatData = await getChat(chatId);
+        const messageData = await getChatMessages(chatId);
 
-        setChat(data);
+        setChat(chatData);
+        setMessages(messageData);
       } catch (error) {
         console.error("Failed to load chat:", error);
 
@@ -123,35 +135,52 @@ export default function ChatPage() {
 
           </div>
 
-          {/* Empty chat */}
-          <div className="flex flex-1 items-center justify-center">
+          {/* Messages */}
+          <div className="flex-1 space-y-4 overflow-y-auto py-6">
 
-            <div className="max-w-md text-center">
+              {messages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                      <div className="max-w-md text-center">
 
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-400/10 text-2xl text-cyan-400">
-                +
-              </div>
+                          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-400/10 text-2xl text-cyan-400">
+                              +
+                          </div>
 
-              <h2 className="mt-6 text-2xl font-semibold">
-                Continue your knowledge session
-              </h2>
+                          <h2 className="mt-6 text-2xl font-semibold">
+                              Continue your knowledge session
+                          </h2>
 
-              <p className="mt-3 leading-6 text-gray-400">
-                Upload a document to this chat and start
-                asking questions about your knowledge.
-              </p>
+                          <p className="mt-3 leading-6 text-gray-400">
+                              This conversation doesn't have any
+                              messages yet.
+                          </p>
 
-              <button
-                className="mt-7 rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-black transition hover:bg-cyan-400"
-              >
-                Upload Document
-              </button>
-
-              <p className="mt-4 text-xs text-gray-600">
-                Chat ID: {chat.id}
-              </p>
-
-            </div>
+                      </div>
+                  </div>
+              ) : (
+                  messages.map((message) => (
+                      <div
+                          key={message.id}
+                          className={`flex ${
+                              message.role === "user"
+                                  ? "justify-end"
+                                  : "justify-start"
+                          }`}
+                      >
+                          <div
+                              className={`max-w-[75%] rounded-2xl px-5 py-3 ${
+                                  message.role === "user"
+                                      ? "bg-cyan-500 text-black"
+                                      : "border border-white/10 bg-white/[0.05] text-white"
+                              }`}
+                          >
+                              <p className="whitespace-pre-wrap leading-6">
+                                  {message.content}
+                              </p>
+                          </div>
+                      </div>
+                  ))
+              )}
 
           </div>
 

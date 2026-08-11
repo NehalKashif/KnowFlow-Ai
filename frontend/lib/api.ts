@@ -89,3 +89,19 @@ export async function getChat(chatId: string) {
 
   return response.json();
 }
+
+export async function getChatMessages(chatId: string) {
+    const response = await apiFetch(
+        `/chat/${chatId}/messages`
+    );
+
+    if (!response.ok) {
+        const data = await response.json();
+
+        throw new Error(
+            data.detail || "Failed to load messages."
+        );
+    }
+
+    return response.json();
+}
