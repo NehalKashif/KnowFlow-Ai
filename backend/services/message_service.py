@@ -41,6 +41,7 @@ class MessageService:
             "sources": sources,
             "created_at": datetime.utcnow(),
         }
+        
 
         result = messages_collection.insert_one(message)
 
@@ -65,11 +66,20 @@ class MessageService:
                 {"chat_id": chat_id}
             ).sort("created_at", 1)
         )
+        result = []
 
         for message in messages:
-            message["_id"] = str(message["_id"])
+            result.append(
+                {
+                    "id": str(message["_id"]),
+                    "role": message["role"],
+                    "content": message["content"],
+                    "sources": message.get("sources"),
+                    "created_at": message["created_at"],
+                }
+            )
 
-        return messages
+        return result
 
     @staticmethod
     def get_message(message_id: str):
@@ -179,29 +189,3 @@ class MessageService:
             )
 
         return history
-
-    @staticmethod
-    def get_messages(chat_id: str):
-        """
-        Retrieve all messages of a chat.
-        """
-
-        messages = list(
-            messages_collection.find(
-                {"chat_id": chat_id}
-            ).sort("created_at", 1)
-        )
-
-        result = []
-
-        for message in messages:
-            result.append(
-                {
-                    "id": str(message["_id"]),
-                    "role": message["role"],
-                    "content": message["content"],
-                    "created_at": message["created_at"],
-                }
-            )
-
-        return result

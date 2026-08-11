@@ -102,7 +102,7 @@ export async function getChatMessages(chatId: string) {
             data.detail || "Failed to load messages."
         );
     }
-
+    console.log(await response, "RESPONSE FROM GET CHAT MESSAGES");
     return response.json();
 }
 

@@ -18,11 +18,17 @@ interface Chat {
   title: string;
   created_at: string;
 }
+interface Source {
+  filename: string;
+  page: string;
+}
+
 interface Message {
-    id: string;
-    role: string;
-    content: string;
-    created_at: string;
+  id: string;
+  role: string;
+  content: string;
+  sources: Source[] | null;
+  created_at: string;
 }
 
 export default function ChatPage() {
@@ -50,7 +56,7 @@ export default function ChatPage() {
       try {
         const chatData = await getChat(chatId);
         const messageData = await getChatMessages(chatId);
-
+        console.log("MESSAGES FROM GET CHAT:", messageData);
         setChat(chatData);
         setMessages(messageData);
       } catch (error) {
@@ -180,6 +186,32 @@ export default function ChatPage() {
                               <p className="whitespace-pre-wrap leading-6">
                                   {message.content}
                               </p>
+                              {message.role === "assistant" &&
+                              message.sources &&
+                              message.sources.length > 0 && (
+                                <div className="mt-4 border-t border-white/10 pt-3">
+                                  <p className="mb-2 text-xs font-semibold text-cyan-400">
+                                    Sources
+                                  </p>
+
+                                  <div className="space-y-2">
+                                    {message.sources.map((source, index) => (
+                                      <div
+                                        key={`${source.filename}-${source.page}-${index}`}
+                                        className="rounded-lg bg-white/[0.04] px-3 py-2"
+                                      >
+                                        <p className="text-xs font-medium text-gray-300">
+                                          {source.filename}
+                                        </p>
+
+                                        <p className="text-xs text-gray-500">
+                                          Page {source.page}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                           </div>
                       </div>
                   ))
@@ -201,10 +233,31 @@ export default function ChatPage() {
               setSending(true);
 
               try {
+                const userMessage: Message = {
+                  id: `temp-user-${Date.now()}`,
+                  role: "user",
+                  content: input,
+                  created_at: new Date().toISOString(),
+                  sources: null,
+                };
+
+                setMessages((prev) => [...prev, userMessage]);
+
                 const result = await sendMessage(
                   chatId,
                   question
                 );
+
+                // Add AI response to the UI
+                const aiMessage: Message = {
+                  id: `temp-ai-${Date.now()}`,
+                  role: "assistant",
+                  content: result.answer,
+                  created_at: new Date().toISOString(),
+                  sources: result.sources,
+                };
+
+                setMessages((prev) => [...prev, aiMessage]);
 
                 // We'll add the messages to the UI here
                 console.log("AI response:", result);
