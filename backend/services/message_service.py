@@ -20,6 +20,7 @@ class MessageService:
         chat_id: str,
         role: str,
         content: str,
+        sources: List[dict] | None = None
     ):
         """
         Save a new message to MongoDB.
@@ -28,15 +29,16 @@ class MessageService:
             chat_id: ID of the chat session.
             role: Either 'user' or 'assistant'.
             content: Message content.
-
+            sources: List of source documents.
         Returns:
             Inserted message.
         """
-
+        
         message = {
             "chat_id": chat_id,
             "role": role,
             "content": content,
+            "sources": sources,
             "created_at": datetime.utcnow(),
         }
 

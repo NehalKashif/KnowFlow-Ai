@@ -145,6 +145,7 @@ class ChatEngine:
                 chat_id=chat_id,
                 role="user",
                 content=question,
+                sources = None,
             )
 
         # -----------------------------
@@ -173,6 +174,7 @@ class ChatEngine:
                 chat_id=chat_id,
                 role="assistant",
                 content=answer,
+                sources=unique_sources,
             )
         
         print(unique_sources)

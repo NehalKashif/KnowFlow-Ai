@@ -9,6 +9,7 @@ import Topbar from "@/app/components/topbar";
 import {
     getChat,
     getChatMessages,
+    sendMessage,
 } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
@@ -34,6 +35,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -183,6 +186,55 @@ export default function ChatPage() {
               )}
 
           </div>
+
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+
+              if (!input.trim() || sending) {
+                return;
+              }
+
+              const question = input.trim();
+
+              setInput("");
+              setSending(true);
+
+              try {
+                const result = await sendMessage(
+                  chatId,
+                  question
+                );
+
+                // We'll add the messages to the UI here
+                console.log("AI response:", result);
+              } catch (error) {
+                console.error(
+                  "Failed to send message:",
+                  error
+                );
+              } finally {
+                setSending(false);
+              }
+            }}
+            className="mt-6 flex gap-3"
+          >
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask something about your documents..."
+              disabled={sending}
+              className="flex-1 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-cyan-400/40"
+            />
+
+            <button
+              type="submit"
+              disabled={sending || !input.trim()}
+              className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-black transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {sending ? "Thinking..." : "Send"}
+            </button>
+          </form>
 
         </div>
 

@@ -105,3 +105,27 @@ export async function getChatMessages(chatId: string) {
 
     return response.json();
 }
+
+export async function sendMessage(
+  chatId: string,
+  question: string,
+  topK: number = 5
+) {
+  const response = await apiFetch(`/chat/${chatId}`, {
+    method: "POST",
+    body: JSON.stringify({
+      question,
+      top_k: topK,
+    }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+
+    throw new Error(
+      data.detail || "Failed to send message."
+    );
+  }
+
+  return response.json();
+}
