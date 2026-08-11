@@ -55,7 +55,16 @@ async def upload(
     """
     Upload a PDF and save it to the uploads folder.
     """
+    chat = ChatService.get_chat(
+        user_id=str(current_user["_id"]),
+        chat_id=chat_id,
+    )
 
+    if not chat:
+        raise HTTPException(
+            status_code=404,
+            detail="Chat not found."
+        )
     extension = Path(file.filename).suffix.lower()
 
     if extension not in ALLOWED_EXTENSIONS:
