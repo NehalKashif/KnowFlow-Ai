@@ -129,3 +129,35 @@ export async function sendMessage(
 
   return response.json();
 }
+
+export async function uploadDocument(
+  chatId: string,
+  file: File
+) {
+  const token = getToken();
+
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  const response = await fetch(
+    `${API_URL}/chat/${chatId}/upload`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const data = await response.json();
+
+    throw new Error(
+      data.detail || "Failed to upload document."
+    );
+  }
+
+  return response.json();
+}

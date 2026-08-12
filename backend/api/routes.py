@@ -53,7 +53,8 @@ async def upload(
     current_user=Depends(get_current_user),
 ):
     """
-    Upload a PDF and save it to the uploads folder.
+    Upload a document to a specific chat and process it
+    through the RAG ingestion pipeline.
     """
     chat = ChatService.get_chat(
         user_id=str(current_user["_id"]),
