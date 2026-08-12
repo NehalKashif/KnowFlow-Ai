@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import Sidebar from "@/app/components/sidebar";
 import Topbar from "@/app/components/topbar";
 
 import {
-    getChat,
-    getChatMessages,
-    sendMessage,
+  getChat,
+  getChatMessages,
+  sendMessage,
+  uploadDocument,
 } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
@@ -43,6 +44,8 @@ export default function ChatPage() {
   const [error, setError] = useState("");
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -114,6 +117,37 @@ export default function ChatPage() {
       </main>
     );
   }
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setError("");
+
+      const result = await uploadDocument(chatId, file);
+
+      console.log("Upload successful:", result);
+
+      alert(`${file.name} uploaded successfully.`);
+    } catch (error) {
+      console.error("Upload failed:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to upload document."
+      );
+    } finally {
+      setUploading(false);
+
+      // Allow selecting the same file again
+      event.target.value = "";
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
@@ -236,7 +270,7 @@ export default function ChatPage() {
                 const userMessage: Message = {
                   id: `temp-user-${Date.now()}`,
                   role: "user",
-                  content: input,
+                  content: question,
                   created_at: new Date().toISOString(),
                   sources: null,
                 };
@@ -248,7 +282,6 @@ export default function ChatPage() {
                   question
                 );
 
-                // Add AI response to the UI
                 const aiMessage: Message = {
                   id: `temp-ai-${Date.now()}`,
                   role: "assistant",
@@ -259,8 +292,6 @@ export default function ChatPage() {
 
                 setMessages((prev) => [...prev, aiMessage]);
 
-                // We'll add the messages to the UI here
-                console.log("AI response:", result);
               } catch (error) {
                 console.error(
                   "Failed to send message:",
@@ -272,6 +303,26 @@ export default function ChatPage() {
             }}
             className="mt-6 flex gap-3"
           >
+            {/* Upload button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || sending}
+              className="rounded-xl border border-white/10 bg-white/[0.05] px-5 py-3 font-semibold text-white transition hover:border-cyan-400/30 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {uploading ? "Uploading..." : "Upload"}
+            </button>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.pptx"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+
+            {/* Message input */}
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -280,6 +331,7 @@ export default function ChatPage() {
               className="flex-1 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white outline-none placeholder:text-gray-500 focus:border-cyan-400/40"
             />
 
+            {/* Send */}
             <button
               type="submit"
               disabled={sending || !input.trim()}
