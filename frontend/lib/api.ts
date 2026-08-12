@@ -137,7 +137,6 @@ export async function uploadDocument(
   const token = getToken();
 
   const formData = new FormData();
-
   formData.append("file", file);
 
   const response = await fetch(
@@ -150,6 +149,12 @@ export async function uploadDocument(
       body: formData,
     }
   );
+
+  if (response.status === 401) {
+    localStorage.removeItem("access_token");
+    window.location.href = "/login";
+    throw new Error("Authentication required.");
+  }
 
   if (!response.ok) {
     const data = await response.json();
