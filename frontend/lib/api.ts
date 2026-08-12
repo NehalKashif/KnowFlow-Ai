@@ -166,3 +166,17 @@ export async function uploadDocument(
 
   return response.json();
 }
+
+export async function getChatDocuments(chatId: string) {
+  const response = await apiFetch(`/chat/${chatId}/documents`);
+
+  if (!response.ok) {
+    const data = await response.json();
+
+    throw new Error(
+      data.detail || "Failed to load chat documents."
+    );
+  }
+
+  return response.json();
+}
