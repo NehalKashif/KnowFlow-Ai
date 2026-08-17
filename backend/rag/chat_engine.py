@@ -41,7 +41,7 @@ class ChatEngine:
         prompt_builder: PromptBuilder,
         api_key: str,
         message_service: MessageService,
-        model_name: str = "llama-3.3-70b-versatile",
+        model_name: str = "openai/gpt-oss-120b",
         temperature: float = 0.2,
     ):
         """
@@ -64,6 +64,8 @@ class ChatEngine:
             api_key=api_key,
             model=model_name,
             temperature=temperature,
+            reasoning_effort="low",
+            reasoning_format="hidden",
         )
 
     def chat(
