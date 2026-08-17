@@ -12,6 +12,7 @@ import {
   getChatDocuments,
   sendMessage,
   uploadDocument,
+  deleteDocument,
 } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
@@ -57,6 +58,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -176,6 +178,43 @@ export default function ChatPage() {
 
       // Allows the user to select the same file again
       event.target.value = "";
+    }
+  };
+
+  // --------------------------------------------------
+  // Delete document
+  // --------------------------------------------------
+
+  const handleDeleteDocument = async (documentId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this document? This will remove it from this chat's knowledge base."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingDocumentId(documentId);
+      setError("");
+
+      await deleteDocument(documentId);
+
+      // Remove the document immediately from UI
+      setDocuments((prev) =>
+        prev.filter((document) => document.id !== documentId)
+      );
+
+    } catch (error) {
+      console.error("Delete failed:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete document."
+      );
+    } finally {
+      setDeletingDocumentId(null);
     }
   };
 
@@ -414,6 +453,24 @@ export default function ChatPage() {
                         </p>
 
                       </div>
+
+                      {/* Delete button */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeleteDocument(document.id)
+                        }
+                        disabled={
+                          deletingDocumentId === document.id ||
+                          uploading ||
+                          sending
+                        }
+                        className="shrink-0 rounded-lg border border-red-400/10 bg-red-400/5 px-3 py-2 text-xs font-medium text-red-400 transition hover:border-red-400/30 hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {deletingDocumentId === document.id
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
 
                     </div>
                   ))}

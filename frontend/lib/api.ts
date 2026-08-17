@@ -180,3 +180,29 @@ export async function getChatDocuments(chatId: string) {
 
   return response.json();
 }
+
+export const deleteDocument = async (
+  documentId: string
+) => {
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_URL}/documents/${documentId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.detail || "Failed to delete document."
+    );
+  }
+
+  return data;
+};
