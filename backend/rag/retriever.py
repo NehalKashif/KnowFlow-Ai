@@ -41,16 +41,10 @@ class Retriever:
         chat_id: str | None = None,
     ) -> List[Dict]:
         """
-        Retrieve the top-k most relevant chunks.
+        Retrieve the most relevant document chunks.
 
-        Args:
-            query: User question.
-            top_k: Number of chunks to retrieve.
-            user_id: ID of the user.
-            chat_id: ID of the chat.
-
-        Returns:
-            List of retrieved chunks.
+        Results with a distance greater than the relevance
+        threshold are discarded.
         """
 
         if not query.strip():
@@ -75,11 +69,34 @@ class Retriever:
         metadatas = results.get("metadatas", [[]])[0]
         distances = results.get("distances", [[]])[0]
 
+        # Temporary: inspect distances during testing
+        print("RETRIEVAL RESULTS:")
+
         for doc, metadata, distance in zip(
             documents,
             metadatas,
             distances,
         ):
+            print(
+                f"Distance: {distance} | "
+                f"File: {metadata.get('filename')} | "
+                f"Page: {metadata.get('page')}"
+            )
+
+        # ------------------------------------------------
+        # Relevance threshold
+        # ------------------------------------------------
+
+        DISTANCE_THRESHOLD = 1.5
+
+        for doc, metadata, distance in zip(
+            documents,
+            metadatas,
+            distances,
+        ):
+
+            if distance > DISTANCE_THRESHOLD:
+                continue
 
             retrieved_chunks.append(
                 {
