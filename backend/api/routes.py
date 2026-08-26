@@ -66,12 +66,40 @@ async def upload(
             status_code=404,
             detail="Chat not found."
         )
+
+    if not file.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="No file was selected.",
+        )
+    
     extension = Path(file.filename).suffix.lower()
 
     if extension not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
             detail=f"Unsupported file type: {extension}"
+        )
+
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
+    if file_size > MAX_FILE_SIZE:
+        max_size_mb = MAX_FILE_SIZE / (1024 * 1024)
+
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"File is too large. "
+                f"Maximum allowed size is {max_size_mb:.0f} MB."
+            ),
+        )
+
+    if file_size == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded file is empty.",
         )
 
     save_path = UPLOAD_DIR / file.filename
@@ -121,11 +149,25 @@ async def upload(
 
         documents_collection.insert_one(document)
 
+    except HTTPException:
+        # Preserve our intentional HTTP errors
+        save_path.unlink(missing_ok=True)
+        raise
+
     except Exception as e:
+        # Remove partially processed file if something fails
+        save_path.unlink(missing_ok=True)
+
+        print(f"Document upload error: {e}")
+
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=(
+                "An error occurred while processing the document. "
+                "Please try again."
+            ),
         )
+
 
     finally:
         file.file.close()
