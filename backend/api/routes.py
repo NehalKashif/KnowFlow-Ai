@@ -26,7 +26,7 @@ ALLOWED_EXTENSIONS = {
     ".txt",
     ".md",
 }
-
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 @router.post(
     "/chat/session"
