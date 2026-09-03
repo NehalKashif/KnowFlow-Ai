@@ -326,7 +326,7 @@ export default function ChatPage() {
           {/* Error message */}
           {/* ---------------------------------------- */}
 
-          {error && (
+          {error && documents.length === 0 && (
             <div className="mb-5 rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3">
               <p className="text-sm text-red-400">
                 {error}
@@ -583,10 +583,19 @@ export default function ChatPage() {
               {/* Chat Input */}
               {/* ------------------------------------ */}
 
-              <form
-                onSubmit={handleSendMessage}
-                className="mt-6 flex gap-3"
-              >
+              <div className="mt-6">
+                {error && (
+                  <div className="mb-3 rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3">
+                    <p className="text-sm text-red-400">
+                      {error}
+                    </p>
+                  </div>
+                )}
+
+                <form
+                  onSubmit={handleSendMessage}
+                  className="flex gap-3"
+                >
 
                 {/* Upload another document */}
                 <button
@@ -624,7 +633,8 @@ export default function ChatPage() {
                     : "Send"}
                 </button>
 
-              </form>
+                </form>
+              </div>
             </>
           )}
 
