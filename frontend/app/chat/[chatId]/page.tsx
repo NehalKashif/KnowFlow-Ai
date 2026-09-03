@@ -113,7 +113,7 @@ export default function ChatPage() {
   // Error state
   // --------------------------------------------------
 
-  if (error || !chat) {
+  if (!chat) {
     return (
       <main className="min-h-screen bg-[#07111f] text-white">
         <Sidebar />
