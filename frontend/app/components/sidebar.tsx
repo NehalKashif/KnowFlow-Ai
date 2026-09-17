@@ -4,22 +4,45 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { removeToken } from "@/lib/auth";
 import { createChat } from "@/lib/api";
+import { useState } from "react";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [creatingChat, setCreatingChat] = useState(false);
+  const [newChatError, setNewChatError] = useState("");
 
   const handleLogout = () => {
     removeToken();
     router.replace("/login");
   };
   const handleNewChat = async () => {
-    try {
-        const chat = await createChat("New Chat");
+    if (creatingChat) {
+      return;
+    }
 
-        router.push(`/chat/${chat.id}`);
+    try {
+        setCreatingChat(true);
+        setNewChatError("");
+
+        const chat = await createChat("New Chat");
+        const chatId = chat.id ?? chat._id;
+
+        if (!chatId) {
+          throw new Error("Created chat did not include an ID.");
+        }
+
+        router.push(`/chat/${chatId}`);
     } catch (error) {
         console.error("Failed to create chat:", error);
+
+        setNewChatError(
+          error instanceof Error
+            ? error.message
+            : "Failed to create chat."
+        );
+    } finally {
+        setCreatingChat(false);
     }
   };
   const navigation = [
@@ -57,11 +80,18 @@ export default function Sidebar() {
       <div className="px-4 pt-5">
         <button
             onClick={handleNewChat}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-black transition hover:bg-cyan-400"
+            disabled={creatingChat}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-black transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
             <span className="text-lg">+</span>
-            New Chat
+            {creatingChat ? "Creating..." : "New Chat"}
         </button>
+
+        {newChatError && (
+          <p className="mt-2 px-1 text-xs text-red-400">
+            {newChatError}
+          </p>
+        )}
       </div>
 
       {/* Navigation */}

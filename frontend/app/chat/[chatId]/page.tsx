@@ -45,6 +45,22 @@ interface Document {
   uploaded_at: string;
 }
 
+const EMPTY_CHUNKS_ERROR =
+  "We couldn't extract any usable content from this document. Please try another document or make sure it contains readable text.";
+
+function isEmptyChunksError(message: string) {
+  return /empty\s+chunks|chunks?\s+list\s+is\s+empty|no\s+chunks?\s+(?:were\s+)?generated/i.test(
+    message
+  );
+}
+
+function titleFromFilename(filename: string) {
+  return filename
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+}
+
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
@@ -84,10 +100,11 @@ export default function ChatPage() {
     const loadChat = async () => {
       try {
         const chatData = await getChat(chatId);
+        setChat(chatData);
+
         const messageData = await getChatMessages(chatId);
         const documentData = await getChatDocuments(chatId);
 
-        setChat(chatData);
         setMessages(messageData);
         setDocuments(documentData);
       } catch (error) {
@@ -169,16 +186,50 @@ export default function ChatPage() {
       const result = await uploadDocument(chatId, file);
 
       // Refresh documents after successful upload
-      const updatedDocuments = await getChatDocuments(chatId);
+      try {
+        const updatedDocuments = await getChatDocuments(chatId);
 
-      setDocuments(updatedDocuments);
+        setDocuments(updatedDocuments);
+      } catch (error) {
+        console.error("Failed to refresh documents after upload:", error);
+
+        setError(
+          "Document uploaded successfully, but the document list could not be refreshed."
+        );
+      }
+
+      const uploadedFilename = result.filename || file.name;
+      const title = titleFromFilename(uploadedFilename);
+
+      if (title) {
+        try {
+          setRenaming(true);
+          await renameChat(chatId, title);
+
+          setChat((currentChat) =>
+            currentChat
+              ? { ...currentChat, title }
+              : currentChat
+          );
+        } catch (error) {
+          console.error("Failed to rename chat after upload:", error);
+
+          setError(
+            "Document uploaded successfully, but the chat title could not be updated."
+          );
+        } finally {
+          setRenaming(false);
+        }
+      }
     } catch (error) {
       console.error("Upload failed:", error);
 
+      const message = error instanceof Error ? error.message : "";
+
       setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to upload document."
+        isEmptyChunksError(message)
+          ? EMPTY_CHUNKS_ERROR
+          : message || "Failed to upload document."
       );
     } finally {
       setUploading(false);
@@ -410,9 +461,10 @@ export default function ChatPage() {
                     setNewTitle(chat.title);
                     setEditingTitle(true);
                   }}
-                  className="rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:border-cyan-400/30 hover:text-cyan-400"
+                  disabled={renaming}
+                  className="rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:border-cyan-400/30 hover:text-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Rename
+                  {renaming ? "Preparing..." : "Rename"}
                 </button>
 
                 <button
@@ -452,6 +504,12 @@ export default function ChatPage() {
 
           {error && documents.length === 0 && (
             <div className="mb-5 rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3">
+              {error === EMPTY_CHUNKS_ERROR && (
+                <p className="font-semibold text-red-400">
+                  Document Processing Failed
+                </p>
+              )}
+
               <p className="text-sm text-red-400">
                 {error}
               </p>
@@ -710,6 +768,12 @@ export default function ChatPage() {
               <div className="mt-6">
                 {error && (
                   <div className="mb-3 rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3">
+                    {error === EMPTY_CHUNKS_ERROR && (
+                      <p className="font-semibold text-red-400">
+                        Document Processing Failed
+                      </p>
+                    )}
+
                     <p className="text-sm text-red-400">
                       {error}
                     </p>
