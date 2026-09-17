@@ -1,7 +1,8 @@
-from databases.mongodb import users_collection
+from pymongo import MongoClient
+import os
 
-import logging
+uri = os.getenv("MONGODB_URI")
 
-logger = logging.getLogger(__name__)
+client = MongoClient(uri, serverSelectionTimeoutMS=10000)
 
-logger.info(users_collection)
+print(client.admin.command("ping"))

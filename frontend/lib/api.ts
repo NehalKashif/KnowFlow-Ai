@@ -90,6 +90,25 @@ export async function getChat(chatId: string) {
   return response.json();
 }
 
+export async function renameChat(chatId: string, title: string) {
+  const response = await apiFetch(`/chat/${chatId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      title,
+    }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+
+    throw new Error(
+      data.detail || "Failed to rename chat."
+    );
+  }
+
+  return response.json();
+}
+
 export async function getChatMessages(chatId: string) {
     const response = await apiFetch(
         `/chat/${chatId}/messages`
