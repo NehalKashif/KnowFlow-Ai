@@ -10,10 +10,12 @@ import {
   getChat,
   getChatMessages,
   getChatDocuments,
+  getChatSessions,
   sendMessage,
   uploadDocument,
   deleteDocument,
   renameChat,
+  deleteChat,
 } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
@@ -63,6 +65,7 @@ export default function ChatPage() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [renaming, setRenaming] = useState(false);
+  const [deletingChat, setDeletingChat] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -314,6 +317,38 @@ export default function ChatPage() {
     }
   };
 
+  const handleDeleteChat = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this chat? This action cannot be undone."
+    );
+
+    if (!confirmed || deletingChat) {
+      return;
+    }
+
+    try {
+      setDeletingChat(true);
+      setError("");
+
+      await deleteChat(chatId);
+
+      const remainingChats = await getChatSessions().catch(() => []);
+      const nextChat = remainingChats[0];
+
+      router.replace(nextChat ? `/chat/${nextChat.id}` : "/history");
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete chat."
+      );
+    } finally {
+      setDeletingChat(false);
+    }
+  };
+
   // --------------------------------------------------
   // UI
   // --------------------------------------------------
@@ -378,6 +413,17 @@ export default function ChatPage() {
                   className="rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:border-cyan-400/30 hover:text-cyan-400"
                 >
                   Rename
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteChat}
+                  disabled={deletingChat}
+                  aria-label="Delete chat"
+                  title="Delete chat"
+                  className="rounded-lg border border-transparent px-3 py-1.5 text-xs font-medium text-gray-500 transition hover:border-red-400/20 hover:bg-red-400/10 hover:text-red-400 focus:border-red-400/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {deletingChat ? "Deleting..." : "Delete"}
                 </button>
               </div>
             )}

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/app/components/sidebar";
 import Topbar from "@/app/components/topbar";
 
-import { getChatSessions } from "@/lib/api";
+import { deleteChat, getChatSessions } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
 interface ChatSession {
@@ -21,6 +21,7 @@ export default function HistoryPage() {
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -53,6 +54,37 @@ export default function HistoryPage() {
       day: "numeric",
       year: "numeric",
     });
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this chat? This action cannot be undone."
+    );
+
+    if (!confirmed || deletingChatId) {
+      return;
+    }
+
+    try {
+      setDeletingChatId(chatId);
+      setError("");
+
+      await deleteChat(chatId);
+
+      setChats((currentChats) =>
+        currentChats.filter((chat) => chat.id !== chatId)
+      );
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete chat."
+      );
+    } finally {
+      setDeletingChatId(null);
+    }
   };
 
   return (
@@ -132,36 +164,52 @@ export default function HistoryPage() {
             <div className="space-y-3">
 
               {chats.map((chat) => (
-                <button
+                <div
                   key={chat.id}
-                  onClick={() => router.push(`/chat/${chat.id}`)}
                   className="group flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-left transition hover:border-cyan-400/20 hover:bg-white/[0.07]"
                 >
 
                   {/* Icon */}
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/chat/${chat.id}`)}
+                    className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
                     ◷
-                  </div>
+                    </div>
 
-                  {/* Chat information */}
-                  <div className="min-w-0 flex-1">
+                    {/* Chat information */}
+                    <div className="min-w-0 flex-1">
 
-                    <h2 className="truncate font-semibold text-white">
-                      {chat.title}
-                    </h2>
+                      <h2 className="truncate font-semibold text-white">
+                        {chat.title}
+                      </h2>
 
-                    <p className="mt-1 text-sm text-gray-500">
-                      Created {formatDate(chat.created_at)}
-                    </p>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Created {formatDate(chat.created_at)}
+                      </p>
 
-                  </div>
+                    </div>
 
-                  {/* Arrow */}
-                  <div className="text-gray-600 transition group-hover:translate-x-1 group-hover:text-cyan-400">
-                    →
-                  </div>
+                    {/* Arrow */}
+                    <div className="text-gray-600 transition group-hover:translate-x-1 group-hover:text-cyan-400">
+                      →
+                    </div>
+                  </button>
 
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteChat(chat.id)}
+                    disabled={deletingChatId !== null}
+                    aria-label={`Delete chat ${chat.title}`}
+                    title="Delete chat"
+                    className="shrink-0 rounded-lg border border-transparent px-3 py-2 text-sm text-gray-500 transition hover:border-red-400/20 hover:bg-red-400/10 hover:text-red-400 focus:border-red-400/30 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deletingChatId === chat.id ? "Deleting..." : "Delete"}
+                  </button>
+
+                </div>
               ))}
 
             </div>

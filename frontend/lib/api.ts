@@ -109,6 +109,22 @@ export async function renameChat(chatId: string, title: string) {
   return response.json();
 }
 
+export async function deleteChat(chatId: string) {
+  const response = await apiFetch(`/chat/${chatId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+
+    throw new Error(
+      data.detail || "Failed to delete chat."
+    );
+  }
+
+  return response.json();
+}
+
 export async function getChatMessages(chatId: string) {
     const response = await apiFetch(
         `/chat/${chatId}/messages`
