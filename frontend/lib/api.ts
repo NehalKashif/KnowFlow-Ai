@@ -2,6 +2,18 @@ import { getToken } from "./auth";
 
 const API_URL = "http://127.0.0.1:8000";
 
+export class ApiError extends Error {
+  code?: string;
+  status: number;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {}
@@ -193,9 +205,18 @@ export async function uploadDocument(
 
   if (!response.ok) {
     const data = await response.json();
+    const detail = data.detail;
+
+    if (typeof detail === "object" && detail !== null) {
+      throw new ApiError(
+        detail.message || "Failed to upload document.",
+        response.status,
+        detail.code
+      );
+    }
 
     throw new Error(
-      data.detail || "Failed to upload document."
+      detail || "Failed to upload document."
     );
   }
 

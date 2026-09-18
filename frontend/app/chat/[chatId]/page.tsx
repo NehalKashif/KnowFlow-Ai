@@ -16,6 +16,7 @@ import {
   deleteDocument,
   renameChat,
   deleteChat,
+  ApiError,
 } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
@@ -47,12 +48,6 @@ interface Document {
 
 const EMPTY_CHUNKS_ERROR =
   "We couldn't extract any usable content from this document. Please try another document or make sure it contains readable text.";
-
-function isEmptyChunksError(message: string) {
-  return /empty\s+chunks|chunks?\s+list\s+is\s+empty|no\s+chunks?\s+(?:were\s+)?generated/i.test(
-    message
-  );
-}
 
 function titleFromFilename(filename: string) {
   return filename
@@ -224,10 +219,12 @@ export default function ChatPage() {
     } catch (error) {
       console.error("Upload failed:", error);
 
+      const isEmptyChunksError =
+        error instanceof ApiError && error.code === "NO_USABLE_CONTENT";
       const message = error instanceof Error ? error.message : "";
 
       setError(
-        isEmptyChunksError(message)
+        isEmptyChunksError
           ? EMPTY_CHUNKS_ERROR
           : message || "Failed to upload document."
       );

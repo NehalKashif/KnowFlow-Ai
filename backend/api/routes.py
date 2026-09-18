@@ -126,6 +126,18 @@ async def upload(
 
         documents = loader.load_document(save_path)
         chunks = splitter.split_documents(documents)
+
+        if not documents or not chunks:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "NO_USABLE_CONTENT",
+                    "message": (
+                        "No usable content could be extracted from this document."
+                    ),
+                },
+            )
+
         embeddings = embedding_manager.generate_embeddings(chunks)
         vector_store.add_documents(
             chunks=chunks,
