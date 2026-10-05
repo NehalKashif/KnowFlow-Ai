@@ -67,6 +67,8 @@ export default function ChatPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
 
   const [input, setInput] = useState("");
@@ -85,33 +87,81 @@ export default function ChatPage() {
   // --------------------------------------------------
 
   useEffect(() => {
+    let active = true;
     const token = getToken();
 
     if (!token) {
+      setLoading(false);
       router.replace("/login");
-      return;
+      return () => {
+        active = false;
+      };
     }
+
+    setLoading(true);
+    setChat(null);
+    setMessages([]);
+    setDocuments([]);
+    setNotFound(false);
+    setLoadError("");
+    setError("");
 
     const loadChat = async () => {
       try {
         const chatData = await getChat(chatId);
+
+        if (!active) return;
+
         setChat(chatData);
 
-        const messageData = await getChatMessages(chatId);
-        const documentData = await getChatDocuments(chatId);
+        const [messageResult, documentResult] = await Promise.allSettled([
+          getChatMessages(chatId),
+          getChatDocuments(chatId),
+        ]);
 
-        setMessages(messageData);
-        setDocuments(documentData);
+        if (!active) return;
+
+        const loadErrors: string[] = [];
+
+        if (messageResult.status === "fulfilled") {
+          setMessages(messageResult.value);
+        } else {
+          console.error("Failed to load chat messages:", messageResult.reason);
+          loadErrors.push("Messages could not be loaded.");
+        }
+
+        if (documentResult.status === "fulfilled") {
+          setDocuments(documentResult.value);
+        } else {
+          console.error("Failed to load chat documents:", documentResult.reason);
+          loadErrors.push("Documents could not be loaded.");
+        }
+
+        if (loadErrors.length > 0) {
+          setError(`Unable to load this chat. ${loadErrors.join(" ")}`);
+        }
       } catch (error) {
         console.error("Failed to load chat:", error);
 
-        setError("Unable to load this chat.");
+        if (!active) return;
+
+        if (error instanceof ApiError && error.status === 404) {
+          setNotFound(true);
+        } else {
+          setLoadError("Unable to load this chat. Please try again.");
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     loadChat();
+
+    return () => {
+      active = false;
+    };
   }, [chatId, router]);
 
   // --------------------------------------------------
@@ -132,7 +182,37 @@ export default function ChatPage() {
   // Error state
   // --------------------------------------------------
 
-  if (!chat) {
+  if (loadError) {
+    return (
+      <main className="min-h-screen bg-[#07111f] text-white">
+        <Sidebar />
+        <Topbar />
+
+        <section className="ml-64 pt-20">
+          <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-semibold">
+                Unable to load chat
+              </h1>
+
+              <p className="mt-2 text-gray-400">
+                {loadError}
+              </p>
+
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-6 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-black hover:bg-cyan-400"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (notFound || !chat) {
     return (
       <main className="min-h-screen bg-[#07111f] text-white">
         <Sidebar />
@@ -320,6 +400,17 @@ export default function ChatPage() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      try {
+        const persistedMessages = await getChatMessages(chatId);
+        setMessages(persistedMessages);
+      } catch (error) {
+        console.error("Failed to refresh messages after sending:", error);
+
+        setError(
+          "Message sent successfully, but the conversation could not be refreshed."
+        );
+      }
     } catch (error) {
       console.error("Failed to send message:", error);
 
